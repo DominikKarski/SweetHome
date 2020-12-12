@@ -15,8 +15,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        new CovidAPIService(this).getDataForRegion("Cały kraj");
     }
 
     @Override

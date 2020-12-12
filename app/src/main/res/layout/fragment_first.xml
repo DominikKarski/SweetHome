@@ -7,16 +7,16 @@
     tools:context=".FirstFragment">
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/statistics_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="4dp"
-        android:text="@string/statystyki_placeholder"
+        android:text="@string/stats_placeholder"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/edit_text"
+        android:id="@+id/cases_view"
         android:layout_width="match_parent"
         android:layout_height="110dp"
         android:layout_marginStart="24dp"
@@ -25,11 +25,11 @@
         android:background="@drawable/bg_rounded"
         android:inputType="none"
         android:padding="8dp"
-        android:text="@string/liczby_placeholder"
+        android:text="@string/cases_placeholder"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toBottomOf="@+id/statistics_date" />
 
     <ImageView
         android:id="@+id/imageView"
@@ -41,7 +41,7 @@
         app:layout_constraintBottom_toTopOf="@+id/button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/edit_text" />
+        app:layout_constraintTop_toBottomOf="@+id/cases_view" />
 
     <Button
         android:id="@+id/button"

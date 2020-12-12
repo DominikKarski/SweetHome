@@ -4,11 +4,17 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import static com.alabama.sweethome.CovidAPIService.POLSKA;
+
 public class FirstFragment extends Fragment {
+    private CovidAPIService covidAPIService;
+
+    private TextView dataDate;
 
     @Override
     public View onCreateView(
@@ -21,5 +27,12 @@ public class FirstFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        covidAPIService = new CovidAPIService(this.getContext());
+        dataDate = getView().findViewById(R.id.statistics_date);
+
+        CAPIData stinkyData = covidAPIService.getDataForRegion(POLSKA, true);
+        dataDate.setText(String.format("%s %s", getString(R.string.stats_placeholder), stinkyData.getDataDate()));
+
     }
+
 }

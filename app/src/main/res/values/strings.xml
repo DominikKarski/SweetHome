@@ -11,6 +11,6 @@
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="statystyki_wojewodzkie">Statystyki wojewódzkie</string>
     <string name="ustaw_dom">Ustaw dom</string>
-    <string name="statystyki_placeholder">Statystyki dla Polski z dnia: 04.11.2020</string>
-    <string name="liczby_placeholder">Liczba zarażeń:261510\n\nLiczba zgonów:121</string>
+    <string name="stats_placeholder">Statystyki dla Polski z dnia:</string>
+    <string name="cases_placeholder">Liczba zarażeń:\n\nLiczba zgonów:</string>
 </resources>
