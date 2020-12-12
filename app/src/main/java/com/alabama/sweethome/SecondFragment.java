@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -22,6 +24,8 @@ import java.util.List;
 
 import static com.alabama.sweethome.CovidAPIService.LODZKIE;
 import static com.alabama.sweethome.CovidAPIService.POLSKA;
+import static com.alabama.sweethome.Utils.capitalizeFirstLetter;
+import static com.alabama.sweethome.Utils.decapitalizeFirtLetter;
 
 public class SecondFragment extends Fragment {
     private CovidAPIService covidAPIService;
@@ -48,19 +52,22 @@ public class SecondFragment extends Fragment {
         casesWoj = view.findViewById(R.id.cases_view_voivo);
         voivodeship = view.findViewById(R.id.voivodeship);
 
-        CAPIData voivoData = covidAPIService.getDataForRegion(region, true);
-        dataDate.setText(String.format("%s %s", getString(R.string.stats_placeholder), voivoData.getDataDate()));
+        changeVoivodeship();
 
-        String cases = getString(R.string.cases_placeholder)
-                .replaceFirst("X", Integer.toString(voivoData.getNewCases()))
-                .replaceFirst("Y", Integer.toString(voivoData.getNewDeaths()));
-        casesWoj.setText(cases);
-
-        String regionStr = region.substring(0, 1).toUpperCase() + region.substring(1);
-        voivodeship.setText(String.format("%s %s", getString(R.string.voivodeship), regionStr));
-
-        chartInit(view);
-        chartAddData(covidAPIService.getDataForRegion(POLSKA, true), voivoData);
+        ListView listView = view.findViewById(R.id.list);
+        listView.setAdapter(VoivodeshipAdapter.getNew(getContext()));
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String voivo = (String)parent.getItemAtPosition(position);
+                if(voivo.equals(POLSKA)) {
+                    region = voivo;
+                } else {
+                    region = decapitalizeFirtLetter(voivo);
+                }
+                changeVoivodeship();
+            }
+        });
     }
 
     private void chartInit(View view) {
@@ -93,7 +100,7 @@ public class SecondFragment extends Fragment {
     private void chartAddData(CAPIData countryData, CAPIData voivoData) {
         List<PieEntry> entries = new ArrayList<>();
         entries.add(new PieEntry(countryData.getNewCases() - voivoData.getNewCases(), "Polska"));
-        String regionStr = region.substring(0, 1).toUpperCase() + region.substring(1);
+        String regionStr = capitalizeFirstLetter(region);
         entries.add(new PieEntry(voivoData.getNewCases(), regionStr));
 
         ArrayList<Integer> colors = new ArrayList<>();
@@ -111,5 +118,21 @@ public class SecondFragment extends Fragment {
         chart.setData(data);
         chart.highlightValues(null);
         chart.invalidate();
+    }
+
+    private void changeVoivodeship() {
+        CAPIData voivoData = covidAPIService.getDataForRegion(region, true);
+        dataDate.setText(String.format("%s %s", getString(R.string.stats_placeholder), voivoData.getDataDate()));
+
+        String cases = getString(R.string.cases_placeholder)
+                .replaceFirst("X", Integer.toString(voivoData.getNewCases()))
+                .replaceFirst("Y", Integer.toString(voivoData.getNewDeaths()));
+        casesWoj.setText(cases);
+
+        String regionStr = capitalizeFirstLetter(region);
+        voivodeship.setText(String.format("%s %s", getString(R.string.voivodeship), regionStr));
+
+        chartInit(getView());
+        chartAddData(covidAPIService.getDataForRegion(POLSKA, true), voivoData);
     }
 }
