@@ -15,6 +15,7 @@ public class FirstFragment extends Fragment {
     private CovidAPIService covidAPIService;
 
     private TextView dataDate;
+    private TextView casesView;
 
     @Override
     public View onCreateView(
@@ -28,10 +29,15 @@ public class FirstFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         covidAPIService = new CovidAPIService(this.getContext());
-        dataDate = getView().findViewById(R.id.statistics_date);
+        dataDate = view.findViewById(R.id.statistics_date);
+        casesView = view.findViewById(R.id.cases_view);
 
         CAPIData stinkyData = covidAPIService.getDataForRegion(POLSKA, true);
         dataDate.setText(String.format("%s %s", getString(R.string.stats_placeholder), stinkyData.getDataDate()));
+        String cases = getString(R.string.cases_placeholder)
+                .replaceFirst("X", Integer.toString(stinkyData.getNewCases()))
+                .replaceFirst("Y", Integer.toString(stinkyData.getNewDeaths()));
+        casesView.setText(cases);
 
     }
 
