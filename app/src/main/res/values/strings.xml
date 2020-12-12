@@ -13,4 +13,5 @@
     <string name="ustaw_dom">Ustaw dom</string>
     <string name="stats_placeholder">Statystyki dla Polski z dnia:</string>
     <string name="cases_placeholder">Liczba zarażeń: X\n\nLiczba zgonów: Y</string>
+    <string name="voivodeship">Województwo</string>
 </resources>

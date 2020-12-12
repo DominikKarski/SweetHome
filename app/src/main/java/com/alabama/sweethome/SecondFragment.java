@@ -4,12 +4,20 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.navigation.fragment.NavHostFragment;
+
+import static com.alabama.sweethome.CovidAPIService.LODZKIE;
 
 public class SecondFragment extends Fragment {
+    private CovidAPIService covidAPIService;
+    private String region = LODZKIE;
+
+    private TextView dataDate;
+    private TextView casesWoj;
+    private TextView voivodeship;
 
     @Override
     public View onCreateView(
@@ -22,13 +30,20 @@ public class SecondFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        covidAPIService = new CovidAPIService(getContext());
+        dataDate = view.findViewById(R.id.statistics_date2);
+        casesWoj = view.findViewById(R.id.cases_view_voivo);
+        voivodeship = view.findViewById(R.id.voivodeship);
 
-        view.findViewById(R.id.button_second).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                NavHostFragment.findNavController(SecondFragment.this)
-                        .navigate(R.id.action_SecondFragment_to_FirstFragment);
-            }
-        });
+        CAPIData stinkyData = covidAPIService.getDataForRegion(region, true);
+        dataDate.setText(String.format("%s %s", getString(R.string.stats_placeholder), stinkyData.getDataDate()));
+
+        String cases = getString(R.string.cases_placeholder)
+                .replaceFirst("X", Integer.toString(stinkyData.getNewCases()))
+                .replaceFirst("Y", Integer.toString(stinkyData.getNewDeaths()));
+        casesWoj.setText(cases);
+
+        String regionStr = region.substring(0, 1).toUpperCase() + region.substring(1);
+        voivodeship.setText(String.format("%s %s", getString(R.string.voivodeship), regionStr));
     }
 }

@@ -4,10 +4,12 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 
 import static com.alabama.sweethome.CovidAPIService.POLSKA;
 
@@ -16,6 +18,8 @@ public class FirstFragment extends Fragment {
 
     private TextView dataDate;
     private TextView casesView;
+    private Button statsButton;
+    private Button homeButton;
 
     @Override
     public View onCreateView(
@@ -31,6 +35,8 @@ public class FirstFragment extends Fragment {
         covidAPIService = new CovidAPIService(this.getContext());
         dataDate = view.findViewById(R.id.statistics_date);
         casesView = view.findViewById(R.id.cases_view);
+        statsButton = view.findViewById(R.id.stats_button);
+        homeButton = view.findViewById(R.id.home_button);
 
         CAPIData stinkyData = covidAPIService.getDataForRegion(POLSKA, true);
         dataDate.setText(String.format("%s %s", getString(R.string.stats_placeholder), stinkyData.getDataDate()));
@@ -38,6 +44,11 @@ public class FirstFragment extends Fragment {
                 .replaceFirst("X", Integer.toString(stinkyData.getNewCases()))
                 .replaceFirst("Y", Integer.toString(stinkyData.getNewDeaths()));
         casesView.setText(cases);
+
+        statsButton.setOnClickListener(x -> {
+            NavHostFragment.findNavController(FirstFragment.this)
+                    .navigate(R.id.action_FirstFragment_to_SecondFragment);
+        });
 
     }
 

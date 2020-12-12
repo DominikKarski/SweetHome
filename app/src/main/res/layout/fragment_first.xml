@@ -38,24 +38,24 @@
         android:layout_margin="32dp"
         android:layout_marginBottom="8dp"
         android:src="@drawable/ic_round_home_24"
-        app:layout_constraintBottom_toTopOf="@+id/button"
+        app:layout_constraintBottom_toTopOf="@+id/stats_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/cases_view" />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/stats_button"
         android:layout_width="260dp"
         android:layout_height="wrap_content"
         android:layout_margin="32dp"
         android:padding="16dp"
         android:text="@string/statystyki_wojewodzkie"
-        app:layout_constraintBottom_toTopOf="@+id/button2"
+        app:layout_constraintBottom_toTopOf="@+id/home_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/home_button"
         android:layout_width="260dp"
         android:layout_height="wrap_content"
         android:layout_margin="32dp"
