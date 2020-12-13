@@ -1,10 +1,13 @@
 package com.alabama.sweethome;
 
 import android.Manifest;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -29,6 +32,8 @@ public class GPSController implements LocationListener {
     private Location homeLocation;
     boolean inHome;
 
+    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+
     public GPSController(Context context) {
         this.context = context;
         this.pref = context.getSharedPreferences("home", Context.MODE_PRIVATE);
@@ -46,6 +51,8 @@ public class GPSController implements LocationListener {
             context.startActivity(intent);
         }
 
+        checkLocationPermission();
+
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -57,6 +64,46 @@ public class GPSController implements LocationListener {
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                 0,
                 0, this);
+    }
+
+    private boolean checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(context,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale((Activity) context,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                new AlertDialog.Builder(context)
+                        .setTitle("Brak uprawnień")
+                        .setMessage("Aplikacja nie posiada uprawnień do odczytywania lokalizacji!")
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                //Prompt the user once explanation has been shown
+                                ActivityCompat.requestPermissions((Activity)context,
+                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                        MY_PERMISSIONS_REQUEST_LOCATION);
+                            }
+                        })
+                        .create()
+                        .show();
+
+
+            } else {
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions((Activity) context,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_LOCATION);
+            }
+            return false;
+        } else {
+            return true;
+        }
     }
 
     private synchronized Location restoreHome() {
@@ -102,14 +149,14 @@ public class GPSController implements LocationListener {
             return;
         }
 
-        if(!inHome && location.distanceTo(homeLocation) < 10) {
+        if(!inHome && location.distanceTo(homeLocation) < 10.0) {
             inHome = true;
         }
 
-        if(inHome && location.distanceTo(homeLocation) > 40.0) {
+        if(inHome && location.distanceTo(homeLocation) > 30.0) {
             inHome = false;
             systemNotify("Pamiętaj o maseczce!");
-        } else if(!inHome && location.distanceTo(homeLocation) < 40.0) {
+        } else if(!inHome && location.distanceTo(homeLocation) < 30.0) {
             inHome = true;
             systemNotify("Zdezynfekuj ręce!");
         }

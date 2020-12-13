@@ -23,7 +23,6 @@ import static com.alabama.sweethome.CovidAPIService.MAZOWIECKIE;
 import static com.alabama.sweethome.CovidAPIService.OPOLSKIE;
 import static com.alabama.sweethome.CovidAPIService.PODKARPACKIE;
 import static com.alabama.sweethome.CovidAPIService.PODLASKIE;
-import static com.alabama.sweethome.CovidAPIService.POLSKA;
 import static com.alabama.sweethome.CovidAPIService.POMORSKIE;
 import static com.alabama.sweethome.CovidAPIService.SLASKIE;
 import static com.alabama.sweethome.CovidAPIService.SWIETOKRZYSKIE;
@@ -42,7 +41,6 @@ public class VoivodeshipAdapter extends ArrayAdapter<String> {
 
     public static VoivodeshipAdapter getNew(Context context) {
         ArrayList<String> list = new ArrayList<>();
-        list.add(capitalizeFirstLetter(POLSKA));
         list.add(capitalizeFirstLetter(DOLNOSLASKIE));
         list.add(capitalizeFirstLetter(KUJAWSKO_POMORSKIE));
         list.add(capitalizeFirstLetter(LUBELSKIE));

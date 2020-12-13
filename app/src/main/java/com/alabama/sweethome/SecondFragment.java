@@ -60,11 +60,7 @@ public class SecondFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String voivo = (String)parent.getItemAtPosition(position);
-                if(voivo.equals(POLSKA)) {
-                    region = voivo;
-                } else {
-                    region = decapitalizeFirtLetter(voivo);
-                }
+                region = decapitalizeFirtLetter(voivo);
                 changeVoivodeship();
             }
         });
@@ -87,7 +83,7 @@ public class SecondFragment extends Fragment {
         chart.setCenterText("\uD83C\uDDF5\uD83C\uDDF1");
         chart.setCenterTextSize(50f);
 
-        chart.setHoleRadius(58f);
+        chart.setHoleRadius(50f);
         chart.setTransparentCircleRadius(61f);
 
         chart.setDrawCenterText(true);
