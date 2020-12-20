@@ -5,6 +5,8 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 
+import com.alabama.sweethome.data.DBService;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -24,6 +26,7 @@ public class CovidAPIService {
     private URL endpoint;
     private Context context;
     private List<CAPIData> allData;
+    private DBService dbService;
 
     private final AtomicReference<Boolean> tasksDone = new AtomicReference<>(false);
 
@@ -53,6 +56,9 @@ public class CovidAPIService {
 
     public CovidAPIService(Context context) {
         this.context = context;
+        this.dbService = DBService.getInstance(context);
+
+        this.allData = dbService.getAllData();
 
         try {
             endpoint = new URL("https://www.gov.pl/web/koronawirus/wykaz-zarazen-koronawirusem-sars-cov-2");
@@ -130,6 +136,7 @@ public class CovidAPIService {
 
         allData = new ArrayList<>();
         data.forEach(x -> allData.add(new CAPIData(x)));
+        dbService.addData(data);
         return data;
     }
 
@@ -146,7 +153,7 @@ public class CovidAPIService {
     }
 
     private boolean isDataUpToDate() {
-        if(allData != null) {
+        if(allData.size() > 0) {
             try {
                 Date date = new SimpleDateFormat("dd.MM.yyyy").parse(allData.get(0).getDataDate());
                 Date now = new Date();
