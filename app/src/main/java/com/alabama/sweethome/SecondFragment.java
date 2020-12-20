@@ -117,7 +117,7 @@ public class SecondFragment extends Fragment {
     }
 
     private void changeVoivodeship() {
-        CAPIData voivoData = covidAPIService.getDataForRegion(region, true);
+        CAPIData voivoData = covidAPIService.getDataForRegion(region);
         dataDate.setText(String.format("%s %s", getString(R.string.stats_placeholder), voivoData.getDataDate()));
 
         String cases = getString(R.string.cases_placeholder)
@@ -129,6 +129,6 @@ public class SecondFragment extends Fragment {
         voivodeship.setText(String.format("%s %s", getString(R.string.voivodeship), regionStr));
 
         chartInit(getView());
-        chartAddData(covidAPIService.getDataForRegion(POLSKA, true), voivoData);
+        chartAddData(covidAPIService.getDataForRegion(POLSKA), voivoData);
     }
 }

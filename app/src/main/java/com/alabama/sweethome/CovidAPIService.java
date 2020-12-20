@@ -10,6 +10,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -17,6 +23,9 @@ import javax.net.ssl.HttpsURLConnection;
 public class CovidAPIService {
     private URL endpoint;
     private Context context;
+    private List<CAPIData> allData;
+
+    private final AtomicReference<Boolean> tasksDone = new AtomicReference<>(false);
 
     public static final String POLSKA = "Cały kraj";
     public static final String DOLNOSLASKIE = "dolnośląskie";
@@ -36,6 +45,12 @@ public class CovidAPIService {
     public static final String WIELKOPOLSKIE = "wielkopolskie";
     public static final String ZACHODNIOPOMORSKIE = "zachodniopomorskie";
 
+    private static final List<String> regions = new ArrayList<>(
+            Arrays.asList(
+                    POLSKA, DOLNOSLASKIE, KUJAWSKO_POMORSKIE, LUBELSKIE, LUBUSKIE, LODZKIE, LODZKIE,
+                    MALOPOLSKIE, MAZOWIECKIE, OPOLSKIE, PODKARPACKIE, PODLASKIE, POMORSKIE, SLASKIE,
+                    SWIETOKRZYSKIE, WARMINSKOMAZURSKIE, WIELKOPOLSKIE, ZACHODNIOPOMORSKIE));
+
     public CovidAPIService(Context context) {
         this.context = context;
 
@@ -47,9 +62,15 @@ public class CovidAPIService {
         }
     }
 
-    public CAPIData getDataForRegion(String region, boolean wait) {
-        CAPIData data = new CAPIData();
-        AtomicReference<Boolean> done = new AtomicReference<>(false);
+    public List<CAPIData> getAllData() {
+        List<CAPIData> data = new ArrayList<>(regions.size());
+        regions.forEach(region -> {
+            CAPIData cdata = new CAPIData();
+            cdata.setRegion(region);
+            data.add(cdata);
+        });
+
+        tasksDone.set(false);
         AsyncTask.execute(() -> {
             try {
                 HttpsURLConnection conn = (HttpsURLConnection) endpoint.openConnection();
@@ -60,31 +81,35 @@ public class CovidAPIService {
                     String line;
                     while((line = br.readLine()) != null) {
                         if(line.contains("aktualne na :")) {
-                            data.setDataDate(line.substring(55, 65));
+                            String date = line.substring(55, 65);
+                            data.forEach(x -> x.setDataDate(date));
                         } else if(line.contains("id=\"registerData\"")) {
-                            int pos = line.indexOf(region) + region.length() + 1;
+                            for (CAPIData d : data) {
+                                String region = d.getRegion();
+                                int pos = line.indexOf(region) + region.length() + 1;
 
-                            String cases = followTheSemiColon(pos, line);
-                            data.setNewCases(Integer.parseInt(cases));
+                                String cases = followTheSemiColon(pos, line);
+                                d.setNewCases(Integer.parseInt(cases));
 
-                            int newPos = pos + cases.length() + 1;
-                            String casesPerHundred = followTheSemiColon(newPos, line);
+                                int newPos = pos + cases.length() + 1;
+                                String casesPerHundred = followTheSemiColon(newPos, line);
 
-                            newPos += casesPerHundred.length() + 1;
-                            String allDeaths = followTheSemiColon(newPos, line);
+                                newPos += casesPerHundred.length() + 1;
+                                String allDeaths = followTheSemiColon(newPos, line);
 
-                            newPos += allDeaths.length() + 1;
-                            String covidDeaths = followTheSemiColon(newPos, line);
-                            data.setNewDeaths(Integer.parseInt(covidDeaths));
+                                newPos += allDeaths.length() + 1;
+                                String covidDeaths = followTheSemiColon(newPos, line);
+                                d.setNewDeaths(Integer.parseInt(covidDeaths));
+                            }
                         }
                     }
-                    done.set(true);
+                    tasksDone.set(true);
                     br.close();
                 } else {
                     throw new IOException("Connection could'nt be established.");
                 }
             } catch (IOException e) {
-                done.set(true);
+                tasksDone.set(true);
                 ((Activity)context).runOnUiThread(() -> {
                     new AlertDialog.Builder(context)
                             .setTitle("Web error - check your internet connection!")
@@ -95,17 +120,42 @@ public class CovidAPIService {
             }
         });
 
-        if(wait) {
-            while(!done.get()) {
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        while(!tasksDone.get()) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
 
+        allData = new ArrayList<>();
+        data.forEach(x -> allData.add(new CAPIData(x)));
         return data;
+    }
+
+    public CAPIData getDataForRegion(String region) {
+        List<CAPIData> data;
+        if(!isDataUpToDate()) {
+            data = getAllData();
+        } else {
+            data = new ArrayList<>();
+            allData.forEach(x -> data.add(new CAPIData(x)));
+        }
+
+        return data.stream().filter(x -> x.getRegion().equals(region)).findFirst().orElse(new CAPIData());
+    }
+
+    private boolean isDataUpToDate() {
+        if(allData != null) {
+            try {
+                Date date = new SimpleDateFormat("dd.MM.yyyy").parse(allData.get(0).getDataDate());
+                Date now = new Date();
+                if (date.getYear() == now.getYear() && date.getMonth() == now.getMonth() && date.getDay() == now.getDay()) {
+                    return true;
+                }
+            } catch (ParseException ignored) { }
+        }
+        return false;
     }
 
     /**

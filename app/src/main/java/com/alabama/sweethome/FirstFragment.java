@@ -48,7 +48,7 @@ public class FirstFragment extends Fragment {
 
         handleHomeImageColor();
 
-        CAPIData stinkyData = covidAPIService.getDataForRegion(POLSKA, true);
+        CAPIData stinkyData = covidAPIService.getDataForRegion(POLSKA);
         dataDate.setText(String.format("%s %s", getString(R.string.stats_placeholder), stinkyData.getDataDate()));
         String cases = getString(R.string.cases_placeholder)
                 .replaceFirst("X", Integer.toString(stinkyData.getNewCases()))

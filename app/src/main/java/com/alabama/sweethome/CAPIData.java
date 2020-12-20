@@ -1,9 +1,20 @@
 package com.alabama.sweethome;
 
 public class CAPIData {
+    private String region;
     private String dataDate;
     private int newCases;
     private int newDeaths;
+
+    public CAPIData(CAPIData capiData) {
+        this.region = capiData.getRegion();
+        this.dataDate = capiData.getDataDate();
+        this.newCases = capiData.getNewCases();
+        this.newDeaths = capiData.getNewDeaths();
+    }
+
+    public CAPIData() {
+    }
 
     public synchronized String getDataDate() {
         return dataDate;
@@ -28,4 +39,13 @@ public class CAPIData {
     public synchronized void setNewDeaths(int newDeaths) {
         this.newDeaths = newDeaths;
     }
+
+    public synchronized String getRegion() {
+        return region;
+    }
+
+    public synchronized void setRegion(String region) {
+        this.region = region;
+    }
+
 }
