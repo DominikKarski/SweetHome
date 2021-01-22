@@ -8,7 +8,6 @@ import android.os.AsyncTask;
 import com.alabama.sweethome.data.DBService;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
-import com.opencsv.exceptions.CsvValidationException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -45,12 +44,14 @@ public class CovidAPIService {
         this.dataDate = Calendar.getInstance().getTime();
         this.dbService = DBService.getInstance(context);
         this.allData = dbService.getAllData();
-        if (allData != null) {
+        if (!allData.isEmpty()) {
             try {
                 dataDate = format.parse(allData.get(0).getDataDate());
             } catch (ParseException e) {
                 e.printStackTrace();
             }
+        } else {
+            dataDate = null;
         }
 
 
@@ -60,27 +61,26 @@ public class CovidAPIService {
         final AtomicReference<Boolean> tasksDone = new AtomicReference<>(false);
 
         AsyncTask.execute(() -> {
-            BufferedReader br = null;
             List<String[]> list = null;
 
             try {
-                br = new BufferedReader(new InputStreamReader(csvURL.openStream(), "Cp1250"));
-            } catch (IOException e) {
-                showAlertDialog("Web error - check your internet connection!", "An web error occurred!\nMessage:" + e.getMessage());
-            }
-
-            try {
+                BufferedReader br = new BufferedReader(new InputStreamReader(csvURL.openStream(), "Cp1250"));
                 CSVReader reader = new CSVReader(br);
                 list = reader.readAll();
                 br.close();
                 reader.close();
-            } catch (CsvValidationException | IOException e) {
-                showAlertDialog("CSV validation error!", "Message:" + e.getMessage());
+
+            } catch (IOException e) {
+                showAlertDialog("Web error - check your internet connection!", "An web error occurred!\nMessage:" + e.getMessage());
             } catch (CsvException e) {
-                showAlertDialog("CSV error!", "Message: " + e.getMessage());
+                showAlertDialog("CSV validation error!", "Message:" + e.getMessage());
             }
 
-            allData = toDataList(list);
+            if(list != null) {
+                allData = toDataList(list);
+            } else {
+                allData = new ArrayList<>();
+            }
             tasksDone.set(true);
         });
 
@@ -104,6 +104,9 @@ public class CovidAPIService {
     }
 
     private boolean isDataUpToDate() {
+        if(dataDate == null) {
+            return false;
+        }
         return format.format(Calendar.getInstance().getTime()).equals(format.format(dataDate));
     }
 
