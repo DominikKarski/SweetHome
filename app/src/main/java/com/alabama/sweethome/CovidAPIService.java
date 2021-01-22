@@ -6,6 +6,9 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.alabama.sweethome.data.DBService;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
+import com.opencsv.exceptions.CsvValidationException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,19 +19,122 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.net.ssl.HttpsURLConnection;
 
 public class CovidAPIService {
-    private URL endpoint;
+    private URL csvURL;
     private Context context;
     private List<CAPIData> allData;
     private DBService dbService;
+    private Date dataDate;
 
-    private final AtomicReference<Boolean> tasksDone = new AtomicReference<>(false);
+    private final SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
+
+    public CovidAPIService(Context context) {
+        try {
+            this.csvURL = new URL("https://arcgis.com/sharing/rest/content/items/829ec9ff36bc45a88e1245a82fff4ee0/data");
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        this.context = context;
+        this.dataDate = Calendar.getInstance().getTime();
+        this.dbService = DBService.getInstance(context);
+        this.allData = dbService.getAllData();
+        if (allData != null) {
+            try {
+                dataDate = format.parse(allData.get(0).getDataDate());
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+    }
+
+    public List<CAPIData> getAllData() {
+        final AtomicReference<Boolean> tasksDone = new AtomicReference<>(false);
+
+        AsyncTask.execute(() -> {
+            BufferedReader br = null;
+            List<String[]> list = null;
+
+            try {
+                br = new BufferedReader(new InputStreamReader(csvURL.openStream(), "Cp1250"));
+            } catch (IOException e) {
+                showAlertDialog("Web error - check your internet connection!", "An web error occurred!\nMessage:" + e.getMessage());
+            }
+
+            try {
+                CSVReader reader = new CSVReader(br);
+                list = reader.readAll();
+                br.close();
+                reader.close();
+            } catch (CsvValidationException | IOException e) {
+                showAlertDialog("CSV validation error!", "Message:" + e.getMessage());
+            } catch (CsvException e) {
+                showAlertDialog("CSV error!", "Message: " + e.getMessage());
+            }
+
+            allData = toDataList(list);
+            tasksDone.set(true);
+        });
+
+        while(!tasksDone.get()) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        dbService.addData(allData);
+        return allData;
+    }
+
+    public CAPIData getDataForRegion(String region) {
+        if (!isDataUpToDate()) {
+            getAllData();
+        }
+        return allData.stream().filter(x -> x.getRegion().equals(region)).findFirst().orElse(new CAPIData());
+    }
+
+    private boolean isDataUpToDate() {
+        return format.format(Calendar.getInstance().getTime()).equals(format.format(dataDate));
+    }
+
+    private List<CAPIData> toDataList(List<String[]> list) {
+        List<CAPIData> dataList = new ArrayList<>();
+
+        for (int i = 1; i < list.size(); i++) {
+            String tmp = list.get(i)[0];
+            String[] dataArray = separateSemicolons(tmp);
+
+            CAPIData data = new CAPIData();
+            data.setRegion(dataArray[0]);
+            data.setNewCases(Integer.parseInt(dataArray[1]));
+            data.setNewDeaths(Integer.parseInt(dataArray[3]));
+            data.setDataDate(format.format(Calendar.getInstance().getTime()));
+            dataList.add(data);
+        }
+        return dataList;
+    }
+
+    private String[] separateSemicolons(String string) {
+        return string.split(";");
+    }
+
+    private void showAlertDialog(String title, String message) {
+        ((Activity)context).runOnUiThread(() -> new AlertDialog.Builder(context)
+                .setTitle(title)
+                .setMessage(message)
+                .setNeutralButton("OK", (dialog, which) -> dialog.dismiss())
+                .create().show());
+    }
 
     public static final String POLSKA = "Cały kraj";
     public static final String DOLNOSLASKIE = "dolnośląskie";
@@ -54,130 +160,4 @@ public class CovidAPIService {
                     MALOPOLSKIE, MAZOWIECKIE, OPOLSKIE, PODKARPACKIE, PODLASKIE, POMORSKIE, SLASKIE,
                     SWIETOKRZYSKIE, WARMINSKOMAZURSKIE, WIELKOPOLSKIE, ZACHODNIOPOMORSKIE));
 
-    public CovidAPIService(Context context) {
-        this.context = context;
-        this.dbService = DBService.getInstance(context);
-
-        this.allData = dbService.getAllData();
-
-        try {
-            endpoint = new URL("https://www.gov.pl/web/koronawirus/wykaz-zarazen-koronawirusem-sars-cov-2");
-        } catch (MalformedURLException e) {
-            // This case should never happen - there is no use of handling it.
-            e.printStackTrace();
-        }
-    }
-
-    public List<CAPIData> getAllData() {
-        List<CAPIData> data = new ArrayList<>(regions.size());
-        regions.forEach(region -> {
-            CAPIData cdata = new CAPIData();
-            cdata.setRegion(region);
-            data.add(cdata);
-        });
-
-        tasksDone.set(false);
-        AsyncTask.execute(() -> {
-            try {
-                HttpsURLConnection conn = (HttpsURLConnection) endpoint.openConnection();
-                conn.setRequestProperty("User-Agent", "sweet-home-alabama-app");
-
-                if (100 <= conn.getResponseCode() && conn.getResponseCode() <= 399) {
-                    BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                    String line;
-                    while((line = br.readLine()) != null) {
-                        if(line.contains("aktualne na :")) {
-                            String date = line.substring(55, 65);
-                            data.forEach(x -> x.setDataDate(date));
-                        } else if(line.contains("id=\"registerData\"")) {
-                            for (CAPIData d : data) {
-                                String region = d.getRegion();
-                                int pos = line.indexOf(region) + region.length() + 1;
-
-                                String cases = followTheSemiColon(pos, line);
-                                d.setNewCases(Integer.parseInt(cases));
-
-                                int newPos = pos + cases.length() + 1;
-                                String casesPerHundred = followTheSemiColon(newPos, line);
-
-                                newPos += casesPerHundred.length() + 1;
-                                String allDeaths = followTheSemiColon(newPos, line);
-
-                                newPos += allDeaths.length() + 1;
-                                String covidDeaths = followTheSemiColon(newPos, line);
-                                d.setNewDeaths(Integer.parseInt(covidDeaths));
-                            }
-                        }
-                    }
-                    tasksDone.set(true);
-                    br.close();
-                } else {
-                    throw new IOException("Connection could'nt be established.");
-                }
-            } catch (IOException e) {
-                tasksDone.set(true);
-                ((Activity)context).runOnUiThread(() -> {
-                    new AlertDialog.Builder(context)
-                            .setTitle("Web error - check your internet connection!")
-                            .setMessage("An web error ocurred!\nMessage:" + e.getMessage())
-                            .setNeutralButton("OK", (dialog, which) -> dialog.dismiss())
-                            .create().show();
-                });
-            }
-        });
-
-        while(!tasksDone.get()) {
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        allData = new ArrayList<>();
-        data.forEach(x -> allData.add(new CAPIData(x)));
-        dbService.addData(data);
-        return data;
-    }
-
-    public CAPIData getDataForRegion(String region) {
-        List<CAPIData> data;
-        if(!isDataUpToDate()) {
-            data = getAllData();
-        } else {
-            data = new ArrayList<>();
-            allData.forEach(x -> data.add(new CAPIData(x)));
-        }
-
-        return data.stream().filter(x -> x.getRegion().equals(region)).findFirst().orElse(new CAPIData());
-    }
-
-    private boolean isDataUpToDate() {
-        if(allData.size() > 0) {
-            try {
-                Date date = new SimpleDateFormat("dd.MM.yyyy").parse(allData.get(0).getDataDate());
-                Date now = new Date();
-                if (date.getYear() == now.getYear() && date.getMonth() == now.getMonth() && date.getDay() == now.getDay()) {
-                    return true;
-                }
-            } catch (ParseException ignored) { }
-        }
-        return false;
-    }
-
-    /**
-     * Returns the string between pos and first occurrence of ';' character.
-     * @param pos starting position
-     * @param line string with ';'
-     * @return the string between pos and first occurrence of ';' character.
-     */
-    private String followTheSemiColon(int pos, String line) {
-        StringBuilder casesAsStr = new StringBuilder();
-        int temp_pos = pos;
-        while(line.charAt(temp_pos) != ';') {
-            casesAsStr.append(line.charAt(temp_pos));
-            temp_pos++;
-        }
-        return casesAsStr.toString();
-    }
 }
