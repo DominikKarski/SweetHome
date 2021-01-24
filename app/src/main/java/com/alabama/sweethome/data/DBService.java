@@ -70,13 +70,22 @@ public class DBService extends SQLiteOpenHelper {
 
     public void saveTheme(int theme){
         getWritableDatabase().execSQL("DROP TABLE IF EXISTS " + THEME_TABLE_NAME);
-        onCreate(getWritableDatabase());
+        final String  SAVETHEME = "CREATE TABLE " + THEME_TABLE_NAME +
+                " (_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "theme INTEGER NOT NULL);";
+        getWritableDatabase().execSQL(SAVETHEME);
         getWritableDatabase().insert(THEME_TABLE_NAME, null, toContentValuesTheme(theme));
     }
 
     public void addData(List<CAPIData> data) {
         getWritableDatabase().execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
-        onCreate(getWritableDatabase());
+        final String CREATE = "CREATE TABLE " + TABLE_NAME +
+                " (_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "reg TEXT NOT NULL, " +
+                "date TEXT NOT NULL, " +
+                "cas INTEGER NOT NULL, " +
+                "dcas INTEGER NOT NULL);";
+        getWritableDatabase().execSQL(CREATE);
         data.forEach(this::addData);
     }
 
