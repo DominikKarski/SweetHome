@@ -75,7 +75,7 @@ public class SecondFragment extends Fragment {
         chart.setDragDecelerationFrictionCoef(0.95f);
 
         chart.setDrawHoleEnabled(true);
-        chart.setHoleColor(Color.WHITE);
+        chart.setHoleColor(Color.TRANSPARENT);
 
         chart.setTransparentCircleColor(Color.WHITE);
         chart.setTransparentCircleAlpha(110);
@@ -91,6 +91,16 @@ public class SecondFragment extends Fragment {
         // enable rotation of the chart by touch
         chart.setRotationEnabled(true);
         chart.setHighlightPerTapEnabled(true);
+        chart.getLegend().setTextSize(15f);
+        if(Theme.getTheme().equals("LightTheme")){
+            chart.getLegend().setTextColor(getResources().getColor(R.color.lightFont));
+            chart.setEntryLabelColor(getResources().getColor(R.color.lightFont));
+        } else{
+            chart.getLegend().setTextColor(getResources().getColor(R.color.darkFont));
+            chart.setEntryLabelColor(getResources().getColor(R.color.darkFont));
+        }
+
+
     }
 
     private void chartAddData(CAPIData countryData, CAPIData voivoData) {
@@ -107,10 +117,16 @@ public class SecondFragment extends Fragment {
 
         PieDataSet dataSet = new PieDataSet(entries, "Stosunek zarażeń");
         dataSet.setColors(colors);
+
         PieData data = new PieData(dataSet);
         data.setValueFormatter(new PercentFormatter());
         data.setValueTextSize(16f);
-        data.setValueTextColor(Color.WHITE);
+        if(Theme.getTheme().equals("LightTheme")){
+            data.setValueTextColor(getResources().getColor(R.color.lightFont));
+        } else{
+            data.setValueTextColor(getResources().getColor(R.color.darkFont));
+        }
+
         chart.setData(data);
         chart.highlightValues(null);
         chart.invalidate();

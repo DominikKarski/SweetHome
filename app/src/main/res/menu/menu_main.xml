@@ -1,10 +1,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.alabama.sweethome.MainActivity">
+    tools:context="com.alabama.sweethome.MainActivity"
+    android:background="@color/green"  >
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/color_mode"
         android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
+        android:title="@string/color_mode"
+        android:onClick="changeTheme" />
 </menu>
