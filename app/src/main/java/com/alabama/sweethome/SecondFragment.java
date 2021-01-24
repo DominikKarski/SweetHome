@@ -35,23 +35,25 @@ public class SecondFragment extends Fragment {
     private TextView casesWoj;
     private TextView voivodeship;
     private PieChart chart;
+    private Theme theme;
 
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState
     ) {
+
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_second, container, false);
     }
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        theme = new Theme(view.getContext());
         covidAPIService = new CovidAPIService(getContext());
         dataDate = view.findViewById(R.id.statistics_date2);
         casesWoj = view.findViewById(R.id.cases_view_voivo);
         voivodeship = view.findViewById(R.id.voivodeship);
-
         changeVoivodeship();
 
         ListView listView = view.findViewById(R.id.list);
@@ -92,7 +94,7 @@ public class SecondFragment extends Fragment {
         chart.setRotationEnabled(true);
         chart.setHighlightPerTapEnabled(true);
         chart.getLegend().setTextSize(15f);
-        if(Theme.getTheme().equals("LightTheme")){
+        if(theme.getTheme().equals("LightTheme")){
             chart.getLegend().setTextColor(getResources().getColor(R.color.lightFont));
             chart.setEntryLabelColor(getResources().getColor(R.color.lightFont));
         } else{
@@ -121,7 +123,7 @@ public class SecondFragment extends Fragment {
         PieData data = new PieData(dataSet);
         data.setValueFormatter(new PercentFormatter());
         data.setValueTextSize(16f);
-        if(Theme.getTheme().equals("LightTheme")){
+        if(theme.getTheme().equals("LightTheme")){
             data.setValueTextColor(getResources().getColor(R.color.lightFont));
         } else{
             data.setValueTextColor(getResources().getColor(R.color.darkFont));

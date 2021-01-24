@@ -20,18 +20,18 @@ import androidx.appcompat.widget.Toolbar;
 
 
 public class MainActivity extends AppCompatActivity {
+    private Theme theme ;
+
     @Override
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        switch(Theme.getTheme()){
+        theme = new Theme(this);
+        switch(theme.getTheme()){
             case "LightTheme":
                 getTheme().applyStyle(R.style.Theme_SweetHome_NoActionBar, true);
                 break;
             case "DarkTheme":
-                getTheme().applyStyle(R.style.Theme_SweetHomeDark_NoActionBar, true);
-                break;
-            default:
                 getTheme().applyStyle(R.style.Theme_SweetHomeDark_NoActionBar, true);
                 break;
         }
@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void changeTheme(MenuItem item) {
-        if (Theme.getTheme().equals("LightTheme")){
+        if (theme.getTheme().equals("LightTheme")){
             setTheme("DarkTheme");
         } else{
             setTheme("LightTheme");
@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setTheme(String name) {
-        Theme.setTheme(name);
+        theme.setTheme(name);
         Intent intent = this.getIntent();
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         finish();

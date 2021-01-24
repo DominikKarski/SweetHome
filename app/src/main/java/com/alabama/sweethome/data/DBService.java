@@ -9,15 +9,17 @@ import android.database.sqlite.SQLiteOpenHelper;
 import androidx.annotation.Nullable;
 
 import com.alabama.sweethome.CAPIData;
+import com.alabama.sweethome.Theme;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class DBService extends SQLiteOpenHelper {
-    private static final String DATABASE_NAME = "covid.db";
+    private static final String DATABASE_NAME = "covid2.db";
     private static final int DATABASE_VERSION = 1;
 
     private static final String TABLE_NAME = "coviddata";
+    private static final String THEME_TABLE_NAME ="saveTheme";
     private static final int SCHEMA = 1;
 
 
@@ -43,6 +45,11 @@ public class DBService extends SQLiteOpenHelper {
                 "cas INTEGER NOT NULL, " +
                 "dcas INTEGER NOT NULL);";
         db.execSQL(CREATE);
+
+        final String  SAVETHEME = "CREATE TABLE " + THEME_TABLE_NAME +
+                                  " (_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                                  "theme INTEGER NOT NULL);";
+        db.execSQL(SAVETHEME);
     }
 
     private ContentValues toContentValues(CAPIData data) {
@@ -54,11 +61,46 @@ public class DBService extends SQLiteOpenHelper {
         return cv;
     }
 
+    private ContentValues toContentValuesTheme(int theme) {
+        final ContentValues cv = new ContentValues(1);
+        cv.put("theme", theme);
+        return cv;
+    }
+
+    public void saveTheme(int theme){
+        getWritableDatabase().execSQL("DROP TABLE IF EXISTS " + THEME_TABLE_NAME);
+        onCreate(getWritableDatabase());
+        getWritableDatabase().insert(THEME_TABLE_NAME, null, toContentValuesTheme(theme));
+    }
+
     public void addData(List<CAPIData> data) {
         getWritableDatabase().execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         onCreate(getWritableDatabase());
         data.forEach(this::addData);
     }
+
+    public int getTheme(){
+        Cursor c = null;
+
+        try {
+            c = getReadableDatabase().query(THEME_TABLE_NAME, null, null, null, null, null, null);
+            if (c == null) return 0;
+
+            final int size = c.getCount();
+            int result = 0;
+            if (c.moveToFirst()) {
+                do {
+                    final long id = c.getLong(c.getColumnIndex("_id"));
+                    result = c.getInt(c.getColumnIndex("theme"));
+                } while (c.moveToNext());
+            }
+            return result;
+        } finally {
+            if (c != null && !c.isClosed()) c.close();
+        }
+    }
+
+
 
     public List<CAPIData> getAllData() {
         Cursor c = null;
@@ -99,6 +141,7 @@ public class DBService extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion != newVersion) {
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+            db.execSQL("DROP TABLE IF EXISTS " + THEME_TABLE_NAME);
             onCreate(db);
         }
     }

@@ -1,17 +1,53 @@
 package com.alabama.sweethome;
 
+import android.content.Context;
 import android.graphics.Color;
 
+import com.alabama.sweethome.data.DBService;
+
 public class Theme {
-    private static String Theme = "LightTheme";
 
-    public static String getTheme() {
-        return Theme;
+    private DBService dbService;
+    private String theme;
+
+
+
+    public Theme(Context context) {
+        this.dbService = DBService.getInstance(context);
+        int holder = dbService.getTheme();
+        switch (holder){
+            case 0:
+                theme = "LightTheme";
+                break;
+            case 1:
+                theme = "DarkTheme";
+                break;
+        }
+
     }
 
-    public static void setTheme(String theme) {
-        Theme = theme;
+    public String getTheme() {
+        int holder = dbService.getTheme();
+        switch (holder){
+            case 0:
+                theme = "LightTheme";
+                break;
+            case 1:
+                theme = "DarkTheme";
+                break;
+        }
+
+        return theme;
     }
 
-
+    public  void setTheme(String theme) {
+        switch (theme){
+            case "LightTheme":
+                dbService.saveTheme(0);
+                break;
+            case "DarkTheme":
+                dbService.saveTheme(1);
+                break;
+        }
+    }
 }
